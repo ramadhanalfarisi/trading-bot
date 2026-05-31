@@ -110,7 +110,7 @@ risk:
   max_daily_drawdown: 0.05 # Stop trading jika DD harian > 5%
   max_open_trades: 3
   sl_atr_multiplier: 2.0 # SL = ATR × multiplier
-  tp_atr_multiplier: 4.0 # TP = ATR × multiplier (RR 1:1.5)
+  tp_atr_multiplier: 3.0 # TP = ATR × multiplier (RR 1:1.5)
   news_filter_minutes: 30 # Hindari trading N menit sebelum/sesudah news
 
 # --- Backtest Configuration ---
