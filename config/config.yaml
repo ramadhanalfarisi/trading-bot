@@ -1,0 +1,144 @@
+# ============================================================
+# config/config.yaml — Konfigurasi Global Sistem
+# ============================================================
+
+# --- MetaTrader 5 ---
+mt5:
+  login: 60671867 # Nomor akun MT5 Anda
+  password: "fR1%jA_B"
+  server: "FinexBisnisSolusi-Demo" # Nama server broker
+  timeout: 60000
+
+# --- Data ---
+data:
+  symbols:
+    - EURUSD
+    - GBPUSD
+    - USDJPY
+    - XAUUSD
+  primary_symbol: EURUSD
+  timeframes:
+    primary: M15 # Timeframe utama untuk training
+    confirmation: M5 # Timeframe konfirmasi
+  bars_history: 50000 # Jumlah bar untuk training
+  bars_inference: 300 # Bar yang diambil saat inferensi (sama dengan EA Input)
+  data_dir: "data/raw"
+  processed_dir: "data/processed"
+  tick_dir: "data/tick" # Direktori untuk tick data
+  point: 0.00001 # Point value untuk EURUSD
+  # Date range untuk tick backtest
+  tick_backtest_start_date: "2026-01-01" # Format: YYYY-MM-DD
+  tick_backtest_end_date: "2026-12-31" # Format: YYYY-MM-DD
+
+# --- Feature Engineering ---
+features:
+  # Indikator teknikal
+  rsi_period: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bb_period: 20
+  bb_std: 2.0
+  atr_period: 14
+  ema_periods: [9, 21, 50, 200]
+  sma_periods: [20, 50]
+  stoch_k: 14
+  stoch_d: 3
+  # Lag features
+  lag_returns: [1, 2, 3, 5, 10]
+  # Window untuk rolling stats
+  rolling_windows: [5, 10, 20]
+
+# --- Label / Target ---
+label:
+  lookahead_bars: 3 # Prediksi N bar ke depan
+  threshold_pips:
+    10 # Min pip moTidak terhubung ke MT5vement untuk BUY/SELL signal
+    # Di bawah threshold → HOLD
+
+# --- Preprocessing ---
+preprocessing:
+  scaler: "StandardScaler" # StandardScaler | MinMaxScaler | RobustScaler
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  # Walk-forward validation
+  walkforward_n_splits: 5
+  walkforward_train_size: 2000
+  walkforward_test_size: 500
+
+# --- Model LSTM ---
+lstm:
+  sequence_length: 60 # Panjang lookback sequence
+  hidden_size: 128
+  num_layers: 2
+  dropout: 0.3
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.001
+  patience: 15 # Early stopping patience
+  weight_decay: 0.0001
+
+# --- Model XGBoost ---
+xgboost:
+  n_estimators: 500
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 3
+  gamma: 0.1
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  use_gpu: false # Set true jika ada GPU
+
+# --- Ensemble ---
+ensemble:
+  lstm_weight: 0.45
+  xgboost_weight: 0.55
+  confidence_threshold: 0.60 # Min confidence untuk eksekusi (lebih permisif)
+  # Tuning knobs (opsional):
+  # hold_penalty: kurangi nilai HOLD saat pengambilan keputusan (0.0-1.0). 1.0 = default.
+  # min_signal_prob: min probabilitas untuk BUY/SELL meskipun confidence_threshold lebih tinggi.
+  hold_penalty: 0.1
+  min_signal_prob: 0.08
+
+# --- Risk Management ---
+risk:
+  max_risk_per_trade: 0.01 # 1% risiko per trade dari balance
+  max_spread_pips: 3.0 # Tolak jika spread > nilai ini
+  max_daily_drawdown: 0.05 # Stop trading jika DD harian > 5%
+  max_open_trades: 3
+  sl_atr_multiplier: 2.0 # SL = ATR × multiplier
+  tp_atr_multiplier: 4.0 # TP = ATR × multiplier (RR 1:1.5)
+  news_filter_minutes: 30 # Hindari trading N menit sebelum/sesudah news
+
+# --- Backtest Configuration ---
+backtest:
+  initial_balance: 10000.0 # Saldo awal backtest
+  leverage: 500 # Leverage 1:500
+  pip_value: 10.0 # Nilai per pip per lot (EURUSD)
+  use_leverage_for_lot_sizing: true # Gunakan leverage dalam perhitungan lot
+  commission_per_trade: 1.0 # Komisi per trade (USD)
+api:
+  host: "127.0.0.1"
+  port: 5000
+  debug: false
+  secret_key: "ganti-dengan-secret-key-aman"
+
+# --- Model Paths ---
+paths:
+  models_dir: "models/saved"
+  lstm_model: "models/saved/lstm_model.pt"
+  xgb_model: "models/saved/xgb_model.json"
+  ensemble_model: "models/saved/ensemble.joblib"
+  scaler: "models/saved/scaler.joblib"
+  onnx_model: "models/saved/forex_advisor.onnx"
+  logs_dir: "logs"
+
+# --- Monitoring ---
+monitoring:
+  retrain_interval_days: 7 # Retrain otomatis setiap N hari
+  min_win_rate: 0.45 # Alert jika win rate < nilai ini
+  min_sharpe: 0.5 # Alert jika Sharpe < nilai ini
+  drift_threshold: 0.10 # Alert jika akurasi turun > 10%
